@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flood Monitoring System</title>
+</head>
+
+<body>
+    <h1>🌊 Hệ thống cảnh báo lũ</h1>
+
+    <h2>Mực nước:</h2>
+    <p id="water">Đang tải...</p>
+
+<script>
+async function getData() {
+    try {
+        const response = await fetch("http://192.168.110.1/data");
+        const data = await response.json();
+
+        document.getElementById("water").innerText =
+            data.water + " cm";
+
+    } catch (err) {
+        document.getElementById("water").innerText =
+            "Không kết nối ESP32";
+    }
+}
+
+setInterval(getData, 2000);
+getData();
+</script>
+
+</body>
+</html>
