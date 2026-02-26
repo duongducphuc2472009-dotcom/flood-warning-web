@@ -1,32 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Flood Monitoring System</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Flood Monitoring Dashboard</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#0f172a;
+    color:white;
+    text-align:center;
+}
+
+h1{
+    margin-top:20px;
+}
+
+.card{
+    background:#1e293b;
+    padding:20px;
+    margin:auto;
+    width:320px;
+    border-radius:15px;
+    box-shadow:0 0 15px black;
+}
+
+.tank{
+    height:300px;
+    width:120px;
+    border:4px solid white;
+    margin:auto;
+    position:relative;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.water{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    height:0%;
+    background:linear-gradient(#38bdf8,#0284c7);
+    transition:height 0.5s;
+}
+
+.status{
+    font-size:22px;
+    margin-top:15px;
+    font-weight:bold;
+}
+
+.alert{
+    margin-top:10px;
+    font-size:26px;
+    color:red;
+    display:none;
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+    50%{opacity:0;}
+}
+
+</style>
 </head>
 
 <body>
-    <h1>🌊 Hệ thống cảnh báo lũ</h1>
 
-    <h2>Mực nước:</h2>
-    <p id="water">Đang tải...</p>
+<h1>🌊 SMART FLOOD MONITOR</h1>
+
+<div class="card">
+
+<div class="tank">
+<div id="water" class="water"></div>
+</div>
+
+<h2 id="level">0 mm</h2>
+
+<div id="status" class="status">SAFE</div>
+
+<div id="alert" class="alert">
+⚠ FLOOD WARNING ⚠
+</div>
+
+</div>
 
 <script>
-async function getData() {
-    try {
-        const response = await fetch("http://192.168.110.1/data");
-        const data = await response.json();
 
-        document.getElementById("water").innerText =
-            data.water + " cm";
+/* ===== ESP32 IP ===== */
+/* CHỈ CẦN SỬA DÒNG NÀY */
+const ESP_IP = "http://192.168.1.105";
 
-    } catch (err) {
-        document.getElementById("water").innerText =
-            "Không kết nối ESP32";
+/* ===================== */
+
+async function getData()
+{
+    try{
+        let response =
+        await fetch(ESP_IP + "/data");
+
+        let data = await response.json();
+
+        updateUI(data.water);
+
+    }catch(e){
+        console.log("ESP32 offline");
     }
 }
 
-setInterval(getData, 2000);
-getData();
+function updateUI(level)
+{
+    document.getElementById("level")
+        .innerText = level + " mm";
+
+    let percent = (level/60)*100;
+
+    document.getElementById("water")
+        .style.height = percent + "%";
+
+    let status=document.getElementById("status");
+    let alert=document.getElementById("alert");
+
+    if(level < 30){
+        status.innerText="SAFE";
+        status.style.color="lime";
+        alert.style.display="none";
+    }
+    else if(level < 50){
+        status.innerText="WARNING";
+        status.style.color="yellow";
+        alert.style.display="none";
+    }
+    else{
+        status.innerText="DANGER";
+        status.style.color="red";
+        alert.style.display="block";
+    }
+}
+
+/* realtime update */
+setInterval(getData,500);
+
 </script>
 
 </body>
